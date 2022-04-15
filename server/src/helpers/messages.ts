@@ -9,7 +9,7 @@ export class Messages {
   }
   
   public all = (): IMessage[] => {
-    return this.messages.sort((prev: IMessage, next: IMessage) => new Date(next.timestamp).getTime() - new Date(prev.timestamp).getTime());
+    return this.messages.sort((prev: IMessage, next: IMessage) => new Date(prev.timestamp).getTime() - new Date(next.timestamp).getTime());
   }
   
   public add = (message: IMessage): void => {

@@ -45,7 +45,6 @@ export default class Server {
     
     this.io.on('connection', (client: Socket) => {
       
-      this.sockets.allMessages(client, this.io);
       this.sockets.connect(client, this.io);
       this.sockets.register(client, this.io);
       this.sockets.newMessage(client, this.io);

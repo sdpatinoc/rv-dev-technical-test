@@ -23,9 +23,10 @@ export default class Sockets {
   
   public register = (client: Socket, io: Server) => {
     
-    client.on(constants.actionTypes.register, async (payload: Partial<IUser>, callback: (...args: any[]) => void) => {
+    client.on(constants.actionTypes.register, async (payload: Partial<IUser>, callback?: (...args: any[]) => void) => {
   
       const checkExistingUser: IUser = await (new User()).findOne({nickname: payload.nickname});
+      let authenticatedUser: boolean = false;
       
       if (!checkExistingUser) {
   
@@ -41,10 +42,17 @@ export default class Sockets {
         delete userData.password;
   
         this.connectedUsers.add(userData as IUser);
-        io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
+        await this.allMessages(client, io);
         
+        io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
+        authenticatedUser = true;
+        
+      }
+      
+      if (callback) {
+          
         callback({
-          authenticated: true
+          authenticated: authenticatedUser
         });
         
       }
@@ -55,9 +63,10 @@ export default class Sockets {
   
   public connect = (client: Socket, io: Server) => {
     
-    client.on(constants.actionTypes.connect, async (payload: Partial<IUser>, callback: (...args: any[]) => void) => {
+    client.on(constants.actionTypes.connect, async (payload: Partial<IUser>, callback?: (...args: any[]) => void) => {
       
       const userData: IUser = await (new User()).findOne({nickname: payload.nickname});
+      let authenticatedUser: boolean = false;
       
       if (userData && (await compare(payload.password, userData.password))) {
         
@@ -65,17 +74,17 @@ export default class Sockets {
         delete userData.password;
         
         this.connectedUsers.add(userData as IUser);
+        await this.allMessages(client, io);
+        
         io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
+        authenticatedUser = true;
+        
+      }
   
-        callback({
-          authenticated: true
-        });
-        
-      } else {
-        
-        callback({
-          authenticated: false,
+      if (callback) {
           
+        callback({
+          authenticated: authenticatedUser
         });
         
       }
@@ -100,7 +109,7 @@ export default class Sockets {
   public allMessages = async (client: Socket, io: Server) => {
     
     this.messages.init(await (new Message()).all());
-    io.emit(constants.actionTypes.updateMessagesList, this.messages.all());
+    io.to(client.id).emit(constants.actionTypes.updateMessagesList, this.messages.all());
     
   }
   
@@ -109,7 +118,6 @@ export default class Sockets {
     client.on(constants.actionTypes.newMessage, async (payload: Partial<IMessage>) => {
       
       const userData: IUser = await (new User()).findOne({_id: new ObjectId(payload.user_id)});
-      console.log(userData);
       
       const messageData: Partial<IMessage> = {
         user_id: new ObjectId(userData._id),
@@ -121,7 +129,6 @@ export default class Sockets {
       messageData._id = createdMessage.insertedId;
       
       this.messages.add(messageData as IMessage);
-      console.log(messageData);
       io.emit(constants.actionTypes.updateMessagesList, this.messages.all());
       
     });
