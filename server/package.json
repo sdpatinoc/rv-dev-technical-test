@@ -4,10 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc && npm run copy-public",
     "copy-public": "cp -r ./src/public/ ./dist/",
-    "prestart": "npm run build",
+    "postinstall": "npm run build",
     "start": "node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
