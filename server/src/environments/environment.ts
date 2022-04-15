@@ -1,6 +1,6 @@
 export const environment: any = {
   webSocket: {
-    SERVER_PORT: Number(process.env.SERVER_PORT) || 3000,
+    SERVER_PORT: Number(process.env.SERVER_PORT) || 8080,
   },
   mongoDB: {
     host: process.env.MONGODB_HOST || 'cluster0.553c7.mongodb.net',
