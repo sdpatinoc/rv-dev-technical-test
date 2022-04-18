@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid';
 import { ThemeProvider } from '@mui/material/styles';
 import { UsersList } from '../../containers/main/chat/UsersList';
 import { MessagesList } from '../../containers/main/chat/MessagesList';
-import { NewMessage } from './chat/NewMessage';
+import { NewMessage } from '../../containers/main/chat/NewMessage';
 import React from 'react';
 import PropTypes from 'prop-types';
 import { AccountCircle, Logout } from '@mui/icons-material';
