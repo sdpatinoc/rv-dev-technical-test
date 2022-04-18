@@ -1,14 +1,14 @@
 export const environment: any = {
   cors: {
-    allowedOrigin: process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:3000/',
+    allowedOrigin: process.env.CORS_ALLOWED_ORIGIN,
   },
   webSocket: {
-    port: Number(process.env.PORT) || 4000
+    port: Number(process.env.PORT)
   },
   mongoDB: {
-    host: process.env.MONGODB_HOST || 'cluster0.553c7.mongodb.net',
-    database: process.env.MONGODB_DATABASE || 'chatdb',
-    user: process.env.MONGODB_USER || 'admin',
-    password: process.env.MONGODB_PASSWORD || '2awGEwqKQtWvQZhG'
+    host: process.env.MONGODB_HOST,
+    database: process.env.MONGODB_DATABASE,
+    user: process.env.MONGODB_USER,
+    password: process.env.MONGODB_PASSWORD
   }
 };
