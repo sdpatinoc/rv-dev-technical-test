@@ -21,7 +21,14 @@ export default class Server {
     this.port = environment.webSocket.PORT;
     
     this.httpServer = new http.Server(this.app);
-    this.io = new IOServer(this.httpServer);
+    
+    this.io = new IOServer(this.httpServer, {
+      cors: {
+        origin: 'http://localhost:3000',
+        methods: ['GET', 'POST'],
+        credentials: true
+      }
+    });
   
     this.app.get('/', (request: Request, response: Response) => response.sendFile('public/index.html', {root: __dirname}));
     
@@ -45,10 +52,11 @@ export default class Server {
     
     this.io.on('connection', (client: Socket) => {
       
-      this.sockets.connect(client, this.io);
+      this.sockets.login(client, this.io);
       this.sockets.register(client, this.io);
+      this.sockets.getData(client, this.io);
       this.sockets.newMessage(client, this.io);
-      this.sockets.disconnect(client, this.io);
+      this.sockets.logout(client, this.io);
       
     });
     

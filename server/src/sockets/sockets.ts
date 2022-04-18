@@ -1,5 +1,5 @@
 import { compare, hash } from 'bcrypt';
-import { ObjectId } from 'mongodb';
+import { InsertOneResult, ObjectId } from 'mongodb';
 import { Server, Socket } from 'socket.io';
 import { ConnectedUsers } from '../helpers/connected-users';
 import { Messages } from '../helpers/messages';
@@ -21,70 +21,45 @@ export default class Sockets {
     
   }
   
-  public register = (client: Socket, io: Server) => {
+  public initData = async (client: Socket, io: Server) => {
     
-    client.on(constants.actionTypes.register, async (payload: Partial<IUser>, callback?: (...args: any[]) => void) => {
-  
-      const checkExistingUser: IUser = await (new User()).findOne({nickname: payload.nickname});
-      let authenticatedUser: boolean = false;
-      
-      if (!checkExistingUser) {
-  
-        const userData: Partial<IUser> = {
-          socketID: client.id,
-          ...payload
-        };
-  
-        userData.password = await hash(payload.password, 10);
-        const createdUser: any = await (new User()).insertOne(userData);
-  
-        userData._id = createdUser.insertedId;
-        delete userData.password;
-  
-        this.connectedUsers.add(userData as IUser);
-        await this.allMessages(client, io);
-        
-        io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
-        authenticatedUser = true;
-        
-      }
-      
-      if (callback) {
-          
-        callback({
-          authenticated: authenticatedUser
-        });
-        
-      }
-      
-    });
+    this.messages.init(await (new Message()).all());
+    this.connectedUsers.init(await (new User()).all({connected: true}));
+    
+    io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
+    io.to(client.id).emit(constants.actionTypes.updateMessagesList, this.messages.all());
     
   }
   
-  public connect = (client: Socket, io: Server) => {
+  public login = (client: Socket, io: Server) => {
     
-    client.on(constants.actionTypes.connect, async (payload: Partial<IUser>, callback?: (...args: any[]) => void) => {
+    client.on(constants.actionTypes.login, async (payload: Partial<IUser>, callback?: (...args: any[]) => void) => {
       
       const userData: IUser = await (new User()).findOne({nickname: payload.nickname});
-      let authenticatedUser: boolean = false;
+  
+      let authenticatedUserData: Partial<IUser> = {
+        authenticated: false
+      };
       
       if (userData && (await compare(payload.password, userData.password))) {
         
         userData.socketID = client.id;
         delete userData.password;
         
+        await (new User()).updateOne({_id: new ObjectId(userData._id)}, {connected: true});
+  
+        authenticatedUserData = userData;
+        authenticatedUserData.authenticated = true;
+        authenticatedUserData.connected = true;
+        
         this.connectedUsers.add(userData as IUser);
-        await this.allMessages(client, io);
-        
-        io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
-        authenticatedUser = true;
-        
+  
       }
   
       if (callback) {
           
         callback({
-          authenticated: authenticatedUser
+          userData: authenticatedUserData
         });
         
       }
@@ -93,23 +68,54 @@ export default class Sockets {
     
   }
   
-  public disconnect = (client: Socket, io: Server) => {
+  public register = (client: Socket, io: Server) => {
     
-    client.on(constants.actionTypes.disconnect, () => {
+    client.on(constants.actionTypes.register, async (payload: Partial<IUser>, callback?: (...args: any[]) => void) => {
+  
+      const checkExistingUser: IUser = await (new User()).findOne({nickname: payload.nickname});
       
-      console.log(`Client disconnected: ${client.id}`);
+      let authenticatedUserData: Partial<IUser> = {
+        authenticated: false
+      };
       
-      this.connectedUsers.delete(client.id);
-      io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
+      if (!checkExistingUser) {
+  
+        const userData: Partial<IUser> = {
+          socketID: client.id,
+          ...payload,
+          connected: true
+        };
+  
+        userData.password = await hash(payload.password, 10);
+        const createdUser: InsertOneResult = await (new User()).insertOne(userData);
+  
+        userData._id = createdUser.insertedId;
+        delete userData.password;
+  
+        authenticatedUserData = userData;
+        authenticatedUserData.authenticated = true;
+  
+        this.connectedUsers.add(userData as IUser);
+  
+      }
+      
+      if (callback) {
+          
+        callback({
+          userData: authenticatedUserData
+        });
+        
+      }
       
     });
     
   }
   
-  public allMessages = async (client: Socket, io: Server) => {
+  public getData = (client: Socket, io: Server) => {
     
-    this.messages.init(await (new Message()).all());
-    io.to(client.id).emit(constants.actionTypes.updateMessagesList, this.messages.all());
+    client.on(constants.actionTypes.getData, async () => {
+      await this.initData(client, io);
+    });
     
   }
   
@@ -122,14 +128,36 @@ export default class Sockets {
       const messageData: Partial<IMessage> = {
         user_id: new ObjectId(userData._id),
         timestamp: new Date(),
-        ...payload
+        ...payload,
+        user: {
+          _id: userData._id,
+          name: userData.name,
+          nickname: userData.nickname
+        }
       };
       
-      const createdMessage: any = await (new Message()).insertOne(messageData);
+      const createdMessage: InsertOneResult = await (new Message()).insertOne(messageData);
       messageData._id = createdMessage.insertedId;
       
       this.messages.add(messageData as IMessage);
       io.emit(constants.actionTypes.updateMessagesList, this.messages.all());
+      
+    });
+    
+  }
+  
+  public logout = (client: Socket, io: Server) => {
+    
+    client.on(constants.actionTypes.logout, async (payload: Partial<IUser>, callback?: (...args: any[]) => void) => {
+  
+      await (new User()).updateOne({_id: new ObjectId(payload._id)}, {connected: false});
+      this.connectedUsers.delete(payload._id);
+      
+      io.emit(constants.actionTypes.updateUsersList, this.connectedUsers.all());
+  
+      if (callback) {
+        callback({});
+      }
       
     });
     

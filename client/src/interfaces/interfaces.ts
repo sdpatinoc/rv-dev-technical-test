@@ -1,20 +1,17 @@
-import { ObjectId } from 'mongodb';
-
 export interface IUser {
-  _id: ObjectId;
+  _id: string;
   socketID: string;
   name: string;
   nickname: string;
+  avatar: string;
   password: string | Buffer | any;
   authenticated: boolean;
-  connected: boolean;
 }
 
 export interface IMessage {
-  _id: ObjectId;
-  user_id: ObjectId;
+  _id: string;
+  user_id: string;
   message: string;
   message_type: 'text' | 'giphy';
   timestamp: Date;
-  user?: Partial<IUser>;
 }
