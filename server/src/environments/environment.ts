@@ -1,4 +1,7 @@
 export const environment: any = {
+  cors: {
+    allowedOrigin: process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:3000/',
+  },
   webSocket: {
     PORT: Number(process.env.PORT) || 4000
   },

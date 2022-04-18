@@ -24,7 +24,7 @@ export default class Server {
     
     this.io = new IOServer(this.httpServer, {
       cors: {
-        origin: 'http://localhost:3000',
+        origin: environment.cors.allowedOrigin,
         methods: ['GET', 'POST'],
         credentials: true
       }
