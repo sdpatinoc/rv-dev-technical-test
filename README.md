@@ -1,4 +1,6 @@
 # Technical test
 
 ### Application URL:
-    [URL](https://rv-dev-chat-client.herokuapp.com/)
+
+[Client URL](https://rv-dev-chat-client.herokuapp.com)
+
