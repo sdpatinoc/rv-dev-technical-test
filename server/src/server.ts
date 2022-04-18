@@ -18,7 +18,7 @@ export default class Server {
   private constructor() {
     
     this.app = express();
-    this.port = environment.webSocket.PORT;
+    this.port = environment.webSocket.port;
     
     this.httpServer = new http.Server(this.app);
     

@@ -3,7 +3,7 @@ export const environment: any = {
     allowedOrigin: process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:3000/',
   },
   webSocket: {
-    PORT: Number(process.env.PORT) || 4000
+    port: Number(process.env.PORT) || 4000
   },
   mongoDB: {
     host: process.env.MONGODB_HOST || 'cluster0.553c7.mongodb.net',
