@@ -5,7 +5,7 @@ import { environment } from '../environments/environment';
 
 const setupSocket = (dispatch: any) => {
   
-  const IOClient: Socket = io(environment.webSocket.ENDPOINT, {
+  const IOClient: Socket = io(environment.webSocket.socketEndpoint, {
     withCredentials: true
   });
   
